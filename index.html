@@ -24,7 +24,7 @@
           align-items: center;
         "
       >
-        <!-- state -> "loading" -->
+        <!-- status -> "loading" -->
 
         <div v-if="loading" class="preloader-wrapper big active">
           <div class="spinner-layer spinner-blue-only">
@@ -40,13 +40,13 @@
           </div>
         </div>
 
-        <!-- state -> "failure" -->
+        <!-- status -> "failure" -->
 
         <div v-else-if="error !== null">
           <h2>Ooops, something went wrong :(</h2>
         </div>
 
-        <!-- state -> "success" -->
+        <!-- status -> "success" -->
 
         <div v-else-if="data !== null" class="container">
           <div
