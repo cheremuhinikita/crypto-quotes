@@ -42,13 +42,13 @@
 
         <!-- status -> "failure" -->
 
-        <div v-else-if="error !== null">
+        <div v-else-if="isNonEmptyError">
           <h2>Ooops, something went wrong :(</h2>
         </div>
 
         <!-- status -> "success" -->
 
-        <div v-else-if="data !== null" class="container">
+        <div v-else-if="isNonEmptyAssets" class="container">
           <div
             style="
               height: 100vh;
@@ -91,7 +91,7 @@
     </div>
 
     <script>
-      const { createApp } = Vue;
+      const { createApp, ref, computed, onMounted } = Vue;
 
       const API_KEY = "A1A86E6A-AB17-4E61-8577-A8B86A5C2184";
 
@@ -153,25 +153,36 @@
       // vue app
 
       createApp({
-        data() {
+        setup() {
+          const loading = ref(false);
+          const error = ref(null);
+          const assets = ref(null);
+          const assetsIcons = ref(null);
+
+          const isNonEmptyError = computed(() => error.value !== null);
+          const isNonEmptyAssets = computed(() => assets.value !== null);
+
+          onMounted(async () => {
+            try {
+              loading.value = true;
+              assetsIcons.value = await getAssetsIcons();
+              assets.value = await getAssets(assetsIcons.value);
+            } catch (err) {
+              console.error(err);
+              error.value = err;
+            } finally {
+              loading.value = false;
+            }
+          });
+
           return {
-            loading: false,
-            error: null,
-            assets: null,
-            assetsIcons: null,
+            loading,
+            error,
+            assets,
+            assetsIcons,
+            isNonEmptyError,
+            isNonEmptyAssets,
           };
-        },
-        async mounted() {
-          try {
-            this.loading = true;
-            this.assetsIcons = await getAssetsIcons();
-            this.assets = await getAssets(this.assetsIcons);
-          } catch (err) {
-            console.error(err);
-            this.error = err;
-          } finally {
-            this.loading = false;
-          }
         },
       }).mount("#app");
     </script>
