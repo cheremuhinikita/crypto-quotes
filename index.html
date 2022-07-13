@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>crypto quotes</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  </head>
+  <body>
+    <script src="https://unpkg.com/vue@3"></script>
+
+    <div id="app">
+      <div
+        style="
+          width: 100vw;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <!-- state -> "loading" -->
+
+        <div v-if="loading" class="preloader-wrapper big active">
+          <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
+            </div>
+            <div class="gap-patch">
+              <div class="circle"></div>
+            </div>
+            <div class="circle-clipper right">
+              <div class="circle"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- state -> "failure" -->
+
+        <div v-else-if="error !== null">
+          <h2>Ooops, something went wrong :(</h2>
+        </div>
+
+        <!-- state -> "success" -->
+
+        <div v-else-if="data !== null" class="container">
+          <div
+            style="
+              height: 100vh;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            "
+          >
+            <h1>crypto quotes</h1>
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>id</th>
+                  <th>name</th>
+                  <th>price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="{ assetId, name, priceUSD, iconURL } in assets"
+                  :key="assetId"
+                >
+                  <td>
+                    <img
+                      :src="iconURL"
+                      :alt="name"
+                      style="width: 30px; height: 30px"
+                    />
+                  </td>
+                  <td>{{ assetId }}</td>
+                  <td>{{ name }}</td>
+                  <td>${{ priceUSD }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp, ref, onMounted } = Vue;
+
+      const API_KEY = "A1A86E6A-AB17-4E61-8577-A8B86A5C2184";
+
+      const quotes = ["EUR", "BTC", "ETH", "RUB", "PPC", "GBP", "LTC", "DOGE"];
+
+      // http lib
+
+      const prepareHttpRequest = (url, options = {}) =>
+        fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            "X-CoinAPI-Key": API_KEY,
+          },
+        }).then((response) => response.json());
+
+      // asset icons
+
+      const mapAssetIconFromDto = (assetIconDto) => ({
+        assetId: assetIconDto.asset_id,
+        URL: assetIconDto.url,
+      });
+
+      const getAssetsIcons = () =>
+        prepareHttpRequest("https://rest.coinapi.io/v1/assets/icons/20").then(
+          (data) =>
+            data.map((assetIconDto) => mapAssetIconFromDto(assetIconDto))
+        );
+
+      const getURLFromAssetIcon = (assetId, assetsIcons) => {
+        const existIcon = assetsIcons.find(
+          (assetsIcon) => assetsIcon.assetId === assetId
+        );
+        if (existIcon === undefined) {
+          return null;
+        }
+
+        return existIcon.URL;
+      };
+
+      // assets
+
+      const mapAssetFromDto = (assetDto, assetsIcons) => ({
+        assetId: assetDto.asset_id,
+        name: assetDto.name,
+        priceUSD: assetDto.price_usd.toFixed(2),
+        iconURL: getURLFromAssetIcon(assetDto.asset_id, assetsIcons),
+      });
+
+      const getAssets = (assetsIcons) =>
+        prepareHttpRequest(
+          `https://rest.coinapi.io/v1/assets?filter_asset_id=${quotes.join(
+            ";"
+          )}`
+        ).then((data) =>
+          data.map((assetDto) => mapAssetFromDto(assetDto, assetsIcons))
+        );
+
+      // vue app
+
+      createApp({
+        data() {
+          return {
+            loading: false,
+            error: null,
+            assets: null,
+            assetsIcons: null,
+          };
+        },
+        async mounted() {
+          try {
+            this.loading = true;
+            this.assetsIcons = await getAssetsIcons();
+            this.assets = await getAssets(this.assetsIcons);
+          } catch (err) {
+            console.error(err);
+            this.error = err;
+          } finally {
+            this.loading = false;
+          }
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
