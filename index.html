@@ -42,13 +42,13 @@
 
         <!-- status -> "failure" -->
 
-        <div v-else-if="error !== null">
+        <div v-else-if="isNonEmptyError">
           <h2>Ooops, something went wrong :(</h2>
         </div>
 
         <!-- status -> "success" -->
 
-        <div v-else-if="data !== null" class="container">
+        <div v-else-if="isNonEmptyAssets" class="container">
           <div
             style="
               height: 100vh;
@@ -160,6 +160,14 @@
             assets: null,
             assetsIcons: null,
           };
+        },
+        computed: {
+          isNonEmptyError() {
+            return this.error !== null;
+          },
+          isNonEmptyAssets() {
+            return this.assets !== null;
+          },
         },
         async mounted() {
           try {
