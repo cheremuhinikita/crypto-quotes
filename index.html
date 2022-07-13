@@ -49,43 +49,34 @@
         <!-- status -> "success" -->
 
         <div v-else-if="isNonEmptyAssets" class="container">
-          <div
-            style="
-              height: 100vh;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-            "
-          >
-            <h1>crypto quotes</h1>
-            <table>
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>id</th>
-                  <th>name</th>
-                  <th>price</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="{ assetId, name, priceUSD, iconURL } in assets"
-                  :key="assetId"
-                >
-                  <td>
-                    <img
-                      :src="iconURL"
-                      :alt="name"
-                      style="width: 30px; height: 30px"
-                    />
-                  </td>
-                  <td>{{ assetId }}</td>
-                  <td>{{ name }}</td>
-                  <td>${{ priceUSD }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <h1>crypto quotes</h1>
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>id</th>
+                <th>name</th>
+                <th>price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="{ assetId, name, priceUSD, iconURL } in assets"
+                :key="assetId"
+              >
+                <td>
+                  <img
+                    :src="iconURL"
+                    :alt="name"
+                    style="width: 30px; height: 30px"
+                  />
+                </td>
+                <td>{{ assetId }}</td>
+                <td>{{ name }}</td>
+                <td>${{ priceUSD }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
