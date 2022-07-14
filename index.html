@@ -5,11 +5,36 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>crypto quotes</title>
+
+    <!-- material icons -->
+
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+
+    <!-- materialize -->
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <style>
+      .cell-wrapper-centred {
+        display: flex;
+        align-items: center;
+      }
+
+      .transitioned {
+        transition: 0.125s all;
+      }
+
+      .arrow-icon {
+        font-size: 20px;
+      }
+    </style>
   </head>
   <body>
     <script src="https://unpkg.com/vue@3"></script>
@@ -42,13 +67,13 @@
 
         <!-- status -> "failure" -->
 
-        <div v-else-if="isNonEmptyError">
+        <div v-else-if="isNonNullableError">
           <h2>Ooops, something went wrong :(</h2>
         </div>
 
         <!-- status -> "success" -->
 
-        <div v-else-if="isNonEmptyAssets" class="container">
+        <div v-else-if="isNonNullableAssets" class="container">
           <div
             style="
               height: 100vh;
@@ -61,27 +86,47 @@
             <table>
               <thead>
                 <tr>
-                  <th></th>
-                  <th>id</th>
+                  <th>symbol</th>
                   <th>name</th>
-                  <th>price</th>
+                  <th>price (USD)</th>
+                  <th>change (24h)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr
-                  v-for="{ assetId, name, priceUSD, iconURL } in assets"
-                  :key="assetId"
+                  v-for="{ id, symbol, name, priceUSD, change } in assets"
+                  :key="id"
                 >
-                  <td>
-                    <img
-                      :src="iconURL"
-                      :alt="name"
-                      style="width: 30px; height: 30px"
-                    />
-                  </td>
-                  <td>{{ assetId }}</td>
+                  <td>{{ symbol}}</td>
                   <td>{{ name }}</td>
-                  <td>${{ priceUSD }}</td>
+                  <td
+                    class="transitioned"
+                    :style="{ color: getPriceColor(id) }"
+                  >
+                    <div class="cell-wrapper-centred">
+                      ${{ priceUSD }}
+                      <i
+                        v-if="getPriceIcon(id) !== null"
+                        class="material-icons arrow-icon transitioned"
+                      >
+                        {{ getPriceIcon(id) }}
+                      </i>
+                    </div>
+                  </td>
+                  <td
+                    class="transitioned"
+                    :style="{ color: getChangeColor(change) }"
+                  >
+                    <div class="cell-wrapper-centred">
+                      <i
+                        v-if="getChangeIcon(change) !== null"
+                        class="material-icons arrow-icon transitioned"
+                      >
+                        {{ getChangeIcon(change) }}
+                      </i>
+                      {{ change }}%
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -93,62 +138,59 @@
     <script>
       const { createApp, ref, computed, onMounted } = Vue;
 
-      const API_KEY = "A1A86E6A-AB17-4E61-8577-A8B86A5C2184";
+      const quotes = [
+        "bitcoin",
+        "ethereum",
+        "dogecoin",
+        "tron",
+        "cosmos",
+        "stellar",
+        "litecoin",
+        "zcash",
+        "ren",
+        "tether",
+      ];
 
-      const quotes = ["EUR", "BTC", "ETH", "RUB", "PPC", "GBP", "LTC", "DOGE"];
+      // utils
+
+      const mapToNumberWithFixing = (str) => Number(str).toFixed(2);
+
+      const cmp = (self, other) => {
+        switch (true) {
+          case self > other:
+            return "less";
+          case self === other:
+            return "equal";
+          case self < other:
+            return "greater";
+        }
+      };
 
       // http lib
 
-      const prepareHttpRequest = (url, options = {}) =>
-        fetch(url, {
-          ...options,
-          headers: {
-            ...options.headers,
-            "X-CoinAPI-Key": API_KEY,
-          },
-        }).then((response) => response.json());
-
-      // asset icons
-
-      const mapAssetIconFromDto = (assetIconDto) => ({
-        assetId: assetIconDto.asset_id,
-        URL: assetIconDto.url,
-      });
-
-      const getAssetsIcons = () =>
-        prepareHttpRequest("https://rest.coinapi.io/v1/assets/icons/20").then(
-          (data) =>
-            data.map((assetIconDto) => mapAssetIconFromDto(assetIconDto))
-        );
-
-      const getURLFromAssetIcon = (assetId, assetsIcons) => {
-        const existIcon = assetsIcons.find(
-          (assetsIcon) => assetsIcon.assetId === assetId
-        );
-        if (existIcon === undefined) {
-          return null;
-        }
-
-        return existIcon.URL;
-      };
+      const prepareHttpRequest = (url) =>
+        fetch(url).then((response) => response.json());
 
       // assets
 
-      const mapAssetFromDto = (assetDto, assetsIcons) => ({
-        assetId: assetDto.asset_id,
+      const mapAssetFromDto = (assetDto) => ({
+        id: assetDto.id,
+        symbol: assetDto.symbol,
         name: assetDto.name,
-        priceUSD: assetDto.price_usd.toFixed(2),
-        iconURL: getURLFromAssetIcon(assetDto.asset_id, assetsIcons),
+        priceUSD: mapToNumberWithFixing(assetDto.priceUsd),
+        volume: mapToNumberWithFixing(assetDto.volumeUsd24Hr),
+        change: mapToNumberWithFixing(assetDto.changePercent24Hr),
       });
 
-      const getAssets = (assetsIcons) =>
+      const getAssets = () =>
         prepareHttpRequest(
-          `https://rest.coinapi.io/v1/assets?filter_asset_id=${quotes.join(
-            ";"
-          )}`
-        ).then((data) =>
-          data.map((assetDto) => mapAssetFromDto(assetDto, assetsIcons))
-        );
+          `https://api.coincap.io/v2/assets?ids=${quotes.join(",")}`
+        ).then(({ data }) => data.map((assetDto) => mapAssetFromDto(assetDto)));
+
+      // socket
+
+      const makeCoinCapSocket = () =>
+        new WebSocket(`wss://ws.coincap.io/prices?assets=${quotes.join(",")}`);
 
       // vue app
 
@@ -157,16 +199,87 @@
           const loading = ref(false);
           const error = ref(null);
           const assets = ref(null);
-          const assetsIcons = ref(null);
+          const diffAssets = ref({});
+          const wsRef = ref(null);
 
-          const isNonEmptyError = computed(() => error.value !== null);
-          const isNonEmptyAssets = computed(() => assets.value !== null);
+          const isNonNullableError = computed(() => error.value !== null);
+          const isNonNullableAssets = computed(() => assets.value !== null);
+
+          // mappers
+
+          const mapColorFromOrdering = (ordering) => {
+            switch (ordering) {
+              case "less":
+                return "red";
+              case "equal":
+                return "black";
+              case "greater":
+                return "green";
+            }
+          };
+
+          const mapIconFromOrdering = (ordering) => {
+            switch (ordering) {
+              case "less":
+                return "arrow_drop_down";
+              case "equal":
+                return null;
+              case "greater":
+                return "arrow_drop_up";
+            }
+          };
+
+          // getters
+
+          const getChangeColor = (change) => {
+            const ordering = cmp(0, change);
+
+            return mapColorFromOrdering(ordering);
+          };
+
+          const getChangeIcon = (change) => {
+            const ordering = cmp(0, change);
+
+            return mapIconFromOrdering(ordering);
+          };
+
+          const getPriceColor = (id) =>
+            mapColorFromOrdering(diffAssets.value[id]);
+
+          const getPriceIcon = (id) =>
+            mapIconFromOrdering(diffAssets.value[id]);
+
+          // update assets state
+
+          const updateAssetPriceUSD = (id, priceUSD) => {
+            assets.value = assets.value.map((asset) =>
+              asset.id === id ? { ...asset, priceUSD: priceUSD } : asset
+            );
+          };
+
+          const updateDiffAsset = (id, priceUSD) => {
+            const existAsset = assets.value.find((asset) => asset.id === id);
+
+            diffAssets.value[id] = cmp(existAsset.priceUSD, priceUSD);
+          };
+
+          // handle web socket on message
+
+          const handleMessageSocket = ({ data }) => {
+            const deserializedData = JSON.parse(data);
+
+            for (const [id, priceUsd] of Object.entries(deserializedData)) {
+              const mappedPriceUSD = mapToNumberWithFixing(priceUsd);
+
+              updateDiffAsset(id, mappedPriceUSD);
+              updateAssetPriceUSD(id, mappedPriceUSD);
+            }
+          };
 
           onMounted(async () => {
             try {
               loading.value = true;
-              assetsIcons.value = await getAssetsIcons();
-              assets.value = await getAssets(assetsIcons.value);
+              assets.value = await getAssets();
             } catch (err) {
               console.error(err);
               error.value = err;
@@ -175,13 +288,22 @@
             }
           });
 
+          onMounted(async () => {
+            wsRef.value = makeCoinCapSocket();
+
+            wsRef.value.onmessage = handleMessageSocket;
+          });
+
           return {
             loading,
             error,
             assets,
-            assetsIcons,
-            isNonEmptyError,
-            isNonEmptyAssets,
+            isNonNullableError,
+            isNonNullableAssets,
+            getChangeColor,
+            getChangeIcon,
+            getPriceColor,
+            getPriceIcon,
           };
         },
       }).mount("#app");
