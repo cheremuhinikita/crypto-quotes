@@ -166,11 +166,6 @@
         }
       };
 
-      // http lib
-
-      const prepareHttpRequest = (url) =>
-        fetch(url).then((response) => response.json());
-
       // assets
 
       const mapAssetFromDto = (assetDto) => ({
@@ -183,9 +178,11 @@
       });
 
       const getAssets = () =>
-        prepareHttpRequest(
-          `https://api.coincap.io/v2/assets?ids=${quotes.join(",")}`
-        ).then(({ data }) => data.map((assetDto) => mapAssetFromDto(assetDto)));
+        fetch(`https://api.coincap.io/v2/assets?ids=${quotes.join(",")}`)
+          .then((response) => response.json())
+          .then(({ data }) =>
+            data.map((assetDto) => mapAssetFromDto(assetDto))
+          );
 
       // socket
 
