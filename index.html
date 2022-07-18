@@ -1,309 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crypto quotes</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>crypto quotes</title>
 
-  <!-- material icons -->
+    <!-- material icons -->
 
-  <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"
-          rel="stylesheet"
-  />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
 
-  <!-- materialize -->
+    <!-- materialize -->
 
-  <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
-  />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
-  <style>
-    .cell-wrapper-centred {
-      display: flex;
-      align-items: center;
-    }
+    <style>
+      .cell-wrapper-centred {
+        display: flex;
+        align-items: center;
+      }
 
-    .transitioned {
-      transition: 0.125s all;
-    }
+      .transitioned {
+        transition: 0.125s all;
+      }
 
-    .arrow-icon {
-      font-size: 20px;
-    }
-  </style>
-</head>
-<body>
-<script src="https://unpkg.com/vue@3"></script>
+      .arrow-icon {
+        font-size: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://unpkg.com/vue@3"></script>
 
-<div id="app">
-  <div
-          style="
+    <div id="app">
+      <div
+        style="
           width: 100vw;
           height: 100vh;
           display: flex;
           justify-content: center;
           align-items: center;
         "
-  >
-    <!-- status -> "loading" -->
+      >
+        <!-- status -> "loading" -->
 
-    <div v-if="loading" class="preloader-wrapper big active">
-      <div class="spinner-layer spinner-blue-only">
-        <div class="circle-clipper left">
-          <div class="circle"></div>
+        <div v-if="loading" class="preloader-wrapper big active">
+          <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
+            </div>
+            <div class="gap-patch">
+              <div class="circle"></div>
+            </div>
+            <div class="circle-clipper right">
+              <div class="circle"></div>
+            </div>
+          </div>
         </div>
-        <div class="gap-patch">
-          <div class="circle"></div>
+
+        <!-- status -> "failure" -->
+
+        <div v-else-if="isNonNullableError">
+          <h2>Ooops, something went wrong :(</h2>
         </div>
-        <div class="circle-clipper right">
-          <div class="circle"></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- status -> "failure" -->
+        <!-- status -> "success" -->
 
-    <div v-else-if="isNonNullableError">
-      <h2>Ooops, something went wrong :(</h2>
-    </div>
-
-    <!-- status -> "success" -->
-
-    <div v-else-if="isNonNullableAssets" class="container">
-      <div
-              style="
+        <div v-else-if="isNonNullableAssets" class="container">
+          <div
+            style="
               height: 100vh;
               display: flex;
               flex-direction: column;
               justify-content: center;
             "
-      >
-        <h1>crypto quotes</h1>
-        <table>
-          <thead>
-          <tr>
-            <th>symbol</th>
-            <th>name</th>
-            <th>price (USD)</th>
-            <th>change (24h)</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr
+          >
+            <h1>crypto quotes</h1>
+            <table>
+              <thead>
+                <tr>
+                  <th>symbol</th>
+                  <th>name</th>
+                  <th>price (USD)</th>
+                  <th>change (24h)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
                   v-for="{ id, symbol, name, priceUSD, change } in assets"
                   :key="id"
-          >
-            <td>{{ symbol}}</td>
-            <td>{{ name }}</td>
-            <td
+                >
+                  <td>{{ symbol}}</td>
+                  <td>{{ name }}</td>
+                  <td
                     class="transitioned"
                     :style="{ color: getPriceColor(id) }"
-            >
-              <div class="cell-wrapper-centred">
-                ${{ priceUSD }}
-                <i
+                  >
+                    <div class="cell-wrapper-centred">
+                      ${{ priceUSD }}
+                      <i
                         v-if="getPriceIcon(id) !== null"
                         class="material-icons arrow-icon transitioned"
-                >
-                  {{ getPriceIcon(id) }}
-                </i>
-              </div>
-            </td>
-            <td
+                      >
+                        {{ getPriceIcon(id) }}
+                      </i>
+                    </div>
+                  </td>
+                  <td
                     class="transitioned"
                     :style="{ color: getChangeColor(change) }"
-            >
-              <div class="cell-wrapper-centred">
-                <i
+                  >
+                    <div class="cell-wrapper-centred">
+                      <i
                         v-if="getChangeIcon(change) !== null"
                         class="material-icons arrow-icon transitioned"
-                >
-                  {{ getChangeIcon(change) }}
-                </i>
-                {{ change }}%
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+                      >
+                        {{ getChangeIcon(change) }}
+                      </i>
+                      {{ change }}%
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<script>
-  const { createApp, ref, computed, onMounted } = Vue;
+    <script>
+      const { createApp, ref, computed, onMounted } = Vue;
 
-  const quotes = [
-    "bitcoin",
-    "ethereum",
-    "dogecoin",
-    "tron",
-    "cosmos",
-    "stellar",
-    "litecoin",
-    "zcash",
-    "ren",
-    "tether",
-  ];
+      const quotes = [
+        "bitcoin",
+        "ethereum",
+        "dogecoin",
+        "tron",
+        "cosmos",
+        "stellar",
+        "litecoin",
+        "zcash",
+        "ren",
+        "tether",
+      ];
 
-  // utils
+      // utils
 
-  const mapToNumberWithFixing = (str) => Number(str).toFixed(2);
+      const mapToNumberWithFixing = (str) => Number(str).toFixed(2);
 
-  const cmp = (self, other) => {
-    switch (true) {
-      case self > other:
-        return "less";
-      case self === other:
-        return "equal";
-      case self < other:
-        return "greater";
-    }
-  };
-
-  // assets
-
-  const mapAssetFromDto = (assetDto) => ({
-    id: assetDto.id,
-    symbol: assetDto.symbol,
-    name: assetDto.name,
-    priceUSD: mapToNumberWithFixing(assetDto.priceUsd),
-    volume: mapToNumberWithFixing(assetDto.volumeUsd24Hr),
-    change: mapToNumberWithFixing(assetDto.changePercent24Hr),
-  });
-
-  const getAssets = () =>
-          fetch(`https://api.coincap.io/v2/assets?ids=${quotes.join(",")}`)
-                  .then((response) => response.json())
-                  .then(({ data }) =>
-                          data.map((assetDto) => mapAssetFromDto(assetDto))
-                  );
-
-  // socket
-
-  const makeCoinCapSocket = () =>
-          new WebSocket(`wss://ws.coincap.io/prices?assets=${quotes.join(",")}`);
-
-  // vue app
-
-  createApp({
-    setup() {
-      const loading = ref(false);
-      const error = ref(null);
-      const assets = ref(null);
-      const diffAssets = ref({});
-      const wsRef = ref(null);
-
-      const isNonNullableError = computed(() => error.value !== null);
-      const isNonNullableAssets = computed(() => assets.value !== null);
-
-      // mappers
-
-      const mapColorFromOrdering = (ordering) => {
-        switch (ordering) {
-          case "less":
-            return "red";
-          case "equal":
-            return "black";
-          case "greater":
-            return "green";
+      const cmp = (self, other) => {
+        switch (true) {
+          case self > other:
+            return "less";
+          case self === other:
+            return "equal";
+          case self < other:
+            return "greater";
         }
       };
 
-      const mapIconFromOrdering = (ordering) => {
-        switch (ordering) {
-          case "less":
-            return "arrow_drop_down";
-          case "equal":
-            return null;
-          case "greater":
-            return "arrow_drop_up";
-        }
-      };
+      // assets
 
-      // getters
-
-      const getChangeColor = (change) => {
-        const ordering = cmp(0, change);
-
-        return mapColorFromOrdering(ordering);
-      };
-
-      const getChangeIcon = (change) => {
-        const ordering = cmp(0, change);
-
-        return mapIconFromOrdering(ordering);
-      };
-
-      const getPriceColor = (id) =>
-              mapColorFromOrdering(diffAssets.value[id]);
-
-      const getPriceIcon = (id) =>
-              mapIconFromOrdering(diffAssets.value[id]);
-
-      // update assets state
-
-      const updateAssetPriceUSD = (id, priceUSD) => {
-        assets.value = assets.value.map((asset) =>
-                asset.id === id ? { ...asset, priceUSD: priceUSD } : asset
-        );
-      };
-
-      const updateDiffAsset = (id, priceUSD) => {
-        const existAsset = assets.value.find((asset) => asset.id === id);
-
-        diffAssets.value[id] = cmp(existAsset.priceUSD, priceUSD);
-      };
-
-      // handle web socket on message
-
-      const handleMessageSocket = ({ data }) => {
-        const deserializedData = JSON.parse(data);
-
-        for (const [id, priceUsd] of Object.entries(deserializedData)) {
-          const mappedPriceUSD = mapToNumberWithFixing(priceUsd);
-
-          updateDiffAsset(id, mappedPriceUSD);
-          updateAssetPriceUSD(id, mappedPriceUSD);
-        }
-      };
-
-      onMounted(async () => {
-        try {
-          loading.value = true;
-          assets.value = await getAssets();
-        } catch (err) {
-          console.error(err);
-          error.value = err;
-        } finally {
-          loading.value = false;
-        }
+      const mapAssetFromDto = (assetDto) => ({
+        id: assetDto.id,
+        symbol: assetDto.symbol,
+        name: assetDto.name,
+        priceUSD: mapToNumberWithFixing(assetDto.priceUsd),
+        volume: mapToNumberWithFixing(assetDto.volumeUsd24Hr),
+        change: mapToNumberWithFixing(assetDto.changePercent24Hr),
       });
 
-      onMounted(async () => {
-        wsRef.value = makeCoinCapSocket();
+      const getAssets = () =>
+        fetch(`https://api.coincap.io/v2/assets?ids=${quotes.join(",")}`)
+          .then((response) => response.json())
+          .then(({ data }) =>
+            data.map((assetDto) => mapAssetFromDto(assetDto))
+          );
 
-        wsRef.value.onmessage = handleMessageSocket;
-      });
+      // socket
 
-      return {
-        loading,
-        error,
-        assets,
-        isNonNullableError,
-        isNonNullableAssets,
-        getChangeColor,
-        getChangeIcon,
-        getPriceColor,
-        getPriceIcon,
-      };
-    },
-  }).mount("#app");
-</script>
-</body>
+      const makeCoinCapSocket = () =>
+        new WebSocket(`wss://ws.coincap.io/prices?assets=${quotes.join(",")}`);
+
+      // vue app
+
+      createApp({
+        setup() {
+          const loading = ref(false);
+          const error = ref(null);
+          const assets = ref(null);
+          const diffAssets = ref({});
+          const wsRef = ref(null);
+
+          const isNonNullableError = computed(() => error.value !== null);
+          const isNonNullableAssets = computed(() => assets.value !== null);
+
+          // mappers
+
+          const mapColorFromOrdering = (ordering) => {
+            switch (ordering) {
+              case "less":
+                return "red";
+              case "equal":
+                return "black";
+              case "greater":
+                return "green";
+            }
+          };
+
+          const mapIconFromOrdering = (ordering) => {
+            switch (ordering) {
+              case "less":
+                return "arrow_drop_down";
+              case "equal":
+                return null;
+              case "greater":
+                return "arrow_drop_up";
+            }
+          };
+
+          // getters
+
+          const getChangeColor = (change) => {
+            const ordering = cmp(0, change);
+
+            return mapColorFromOrdering(ordering);
+          };
+
+          const getChangeIcon = (change) => {
+            const ordering = cmp(0, change);
+
+            return mapIconFromOrdering(ordering);
+          };
+
+          const getPriceColor = (id) =>
+            mapColorFromOrdering(diffAssets.value[id]);
+
+          const getPriceIcon = (id) =>
+            mapIconFromOrdering(diffAssets.value[id]);
+
+          // update assets state
+
+          const updateAssetPriceUSD = (id, priceUSD) => {
+            assets.value = assets.value.map((asset) =>
+              asset.id === id ? { ...asset, priceUSD: priceUSD } : asset
+            );
+          };
+
+          const updateDiffAsset = (id, priceUSD) => {
+            const existAsset = assets.value.find((asset) => asset.id === id);
+
+            diffAssets.value[id] = cmp(existAsset.priceUSD, priceUSD);
+          };
+
+          // handle web socket on message
+
+          const handleMessageSocket = ({ data }) => {
+            const deserializedData = JSON.parse(data);
+
+            for (const [id, priceUsd] of Object.entries(deserializedData)) {
+              const mappedPriceUSD = mapToNumberWithFixing(priceUsd);
+
+              updateDiffAsset(id, mappedPriceUSD);
+              updateAssetPriceUSD(id, mappedPriceUSD);
+            }
+          };
+
+          onMounted(async () => {
+            try {
+              loading.value = true;
+              assets.value = await getAssets();
+            } catch (err) {
+              console.error(err);
+              error.value = err;
+            } finally {
+              loading.value = false;
+            }
+          });
+
+          onMounted(async () => {
+            wsRef.value = makeCoinCapSocket();
+
+            wsRef.value.onmessage = handleMessageSocket;
+          });
+
+          return {
+            loading,
+            error,
+            assets,
+            isNonNullableError,
+            isNonNullableAssets,
+            getChangeColor,
+            getChangeIcon,
+            getPriceColor,
+            getPriceIcon,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
 </html>
